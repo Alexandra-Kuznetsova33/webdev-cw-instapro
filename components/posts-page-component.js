@@ -4,10 +4,9 @@ import { posts, goToPage, user, getToken } from "../index.js";
 import { likePost, dislikePost, getPosts } from "../api.js";
 import { escapeHTML } from "../helpers.js";
 
-let likeClickHandler = null; // для удаления предыдущего обработчика
+let likeClickHandler = null; 
 
 export function renderPostsPageComponent({ appEl, userId }) {
-  // Рендеринг постов
   const postsHtml = posts
     .map((post) => {
       const likesCount = post.likes ? post.likes.length : 0;
@@ -21,7 +20,7 @@ export function renderPostsPageComponent({ appEl, userId }) {
           <p class="post-header__user-name">${escapeHTML(post.user.name)}</p>
         </div>
         <div class="post-image-container">
-          <img class="post-image" src="${post.imageUrl}">
+          <img class="post-image" src="${post.imageUrl}" style="cursor: pointer;" data-post-id="${post.id}">
         </div>
         <div class="post-likes">
           <button data-post-id="${post.id}" class="like-button">
@@ -55,7 +54,6 @@ export function renderPostsPageComponent({ appEl, userId }) {
     element: document.querySelector(".header-container"),
   });
 
-  // Переход на страницу пользователя
   for (let userEl of document.querySelectorAll(".post-header")) {
     userEl.addEventListener("click", () => {
       goToPage(USER_POSTS_PAGE, {
@@ -64,10 +62,8 @@ export function renderPostsPageComponent({ appEl, userId }) {
     });
   }
 
-  // Лайки
   const postsContainer = document.querySelector(".posts");
   if (postsContainer) {
-    // Удаляем предыдущий обработчик, если был
     if (likeClickHandler) {
       postsContainer.removeEventListener("click", likeClickHandler);
     }
@@ -94,7 +90,6 @@ export function renderPostsPageComponent({ appEl, userId }) {
           await likePost({ token, postId });
         }
 
-        // Загружаем актуальные посты и фильтруем, если на странице пользователя
         let updatedPosts;
         if (userId) {
           const allPosts = await getPosts({ token });
@@ -115,4 +110,29 @@ export function renderPostsPageComponent({ appEl, userId }) {
 
     postsContainer.addEventListener("click", likeClickHandler);
   }
+
+  document.querySelectorAll('.post-image').forEach(img => {
+    img.addEventListener('click', (e) => {
+      e.stopPropagation(); 
+      const postId = img.dataset.postId;
+      const post = posts.find(p => p.id === postId);
+      if (!post) return;
+      
+      const overlay = document.createElement('div');
+      overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.8); display: flex; align-items: center;
+        justify-content: center; z-index: 1000; cursor: pointer;
+      `;
+      const modalImg = document.createElement('img');
+      modalImg.src = post.imageUrl;
+      modalImg.style.maxWidth = '90%';
+      modalImg.style.maxHeight = '90%';
+      modalImg.style.objectFit = 'contain';
+      overlay.appendChild(modalImg);
+      
+      overlay.addEventListener('click', () => overlay.remove());
+      document.body.appendChild(overlay);
+    });
+  });
 }
