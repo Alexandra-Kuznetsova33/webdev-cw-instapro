@@ -67,3 +67,18 @@ export function uploadImage({ file }) {
     return response.json();
   });
 }
+
+export function addPost({ token, description, imageUrl }) {
+  return fetch(postsHost, {
+    method: "POST",
+    headers: {
+      Authorization: token,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ description, imageUrl }),
+  }).then((response) => {
+    if (response.status === 401) throw new Error("Нет авторизации");
+    if (!response.ok) throw new Error("Ошибка создания поста");
+    return response.json();
+  });
+}
