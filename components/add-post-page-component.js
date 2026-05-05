@@ -20,7 +20,9 @@ export function renderAddPostPageComponent({ appEl, onAddPostClick }) {
 
     appEl.innerHTML = appHtml;
 
-    renderHeaderComponent({ element: document.querySelector(".header-container") });
+    renderHeaderComponent({
+      element: document.querySelector(".header-container"),
+    });
 
     const uploadImageContainer = appEl.querySelector(".upload-image-container");
     if (uploadImageContainer) {
@@ -33,7 +35,9 @@ export function renderAddPostPageComponent({ appEl, onAddPostClick }) {
     }
 
     document.getElementById("add-button").addEventListener("click", () => {
-      const description = document.getElementById("description-input").value.trim();
+      const description = document
+        .getElementById("description-input")
+        .value.trim();
       if (!description) {
         alert("Введите описание");
         return;

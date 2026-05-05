@@ -1,6 +1,6 @@
 // Замени на свой, чтобы получить независимый от других набор данных.
 // "боевая" версия инстапро лежит в ключе prod
-const personalKey = "prod";
+const personalKey = "alex-kuznetsova-myproject";
 const baseHost = "https://webdev-hw-api.vercel.app";
 const postsHost = `${baseHost}/api/v1/${personalKey}/instapro`;
 
@@ -73,12 +73,40 @@ export function addPost({ token, description, imageUrl }) {
     method: "POST",
     headers: {
       Authorization: token,
-      "Content-Type": "application/json",
     },
     body: JSON.stringify({ description, imageUrl }),
+  }).then(async (response) => {
+    if (response.status === 401) throw new Error("Нет авторизации");
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Ошибка создания поста");
+    }
+    return response.json();
+  });
+}
+
+export function likePost({ token, postId }) {
+  return fetch(`${postsHost}/${postId}/like`, {
+    method: "POST",
+    headers: {
+      Authorization: token,
+    },
   }).then((response) => {
     if (response.status === 401) throw new Error("Нет авторизации");
-    if (!response.ok) throw new Error("Ошибка создания поста");
+    if (!response.ok) throw new Error("Ошибка лайка");
+    return response.json();
+  });
+}
+
+export function dislikePost({ token, postId }) {
+  return fetch(`${postsHost}/${postId}/dislike`, {
+    method: "POST",
+    headers: {
+      Authorization: token,
+    },
+  }).then((response) => {
+    if (response.status === 401) throw new Error("Нет авторизации");
+    if (!response.ok) throw new Error("Ошибка дизлайка");
     return response.json();
   });
 }

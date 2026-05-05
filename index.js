@@ -19,8 +19,9 @@ import {
 export let user = getUserFromLocalStorage();
 export let page = null;
 export let posts = [];
+let currentUserId = null;
 
-const getToken = () => {
+export const getToken = () => {
   const token = user ? `Bearer ${user.token}` : undefined;
   return token;
 };
@@ -31,9 +32,6 @@ export const logout = () => {
   goToPage(POSTS_PAGE);
 };
 
-/**
- * Включает страницу приложения
- */
 export const goToPage = (newPage, data) => {
   if (
     [
@@ -45,7 +43,6 @@ export const goToPage = (newPage, data) => {
     ].includes(newPage)
   ) {
     if (newPage === ADD_POSTS_PAGE) {
-      /* Если пользователь не авторизован, то отправляем его на страницу авторизации перед добавлением поста */
       page = user ? ADD_POSTS_PAGE : AUTH_PAGE;
       return renderApp();
     }
@@ -53,7 +50,6 @@ export const goToPage = (newPage, data) => {
     if (newPage === POSTS_PAGE) {
       page = LOADING_PAGE;
       renderApp();
-
       return getPosts({ token: getToken() })
         .then((newPosts) => {
           page = POSTS_PAGE;
@@ -67,16 +63,24 @@ export const goToPage = (newPage, data) => {
     }
 
     if (newPage === USER_POSTS_PAGE) {
-      // @@TODO: реализовать получение постов юзера из API
-      console.log("Открываю страницу пользователя: ", data.userId);
-      page = USER_POSTS_PAGE;
-      posts = [];
-      return renderApp();
+      currentUserId = data.userId;
+      page = LOADING_PAGE;
+      renderApp();
+      return getPosts({ token: getToken() })
+        .then((allPosts) => {
+          page = USER_POSTS_PAGE;
+          posts = allPosts.filter((post) => post.user.id === currentUserId);
+          renderApp();
+        })
+        .catch((error) => {
+          console.error(error);
+          alert("Не удалось загрузить посты пользователя");
+          goToPage(POSTS_PAGE);
+        });
     }
 
     page = newPage;
     renderApp();
-
     return;
   }
 
@@ -86,11 +90,7 @@ export const goToPage = (newPage, data) => {
 const renderApp = () => {
   const appEl = document.getElementById("app");
   if (page === LOADING_PAGE) {
-    return renderLoadingPageComponent({
-      appEl,
-      user,
-      goToPage,
-    });
+    return renderLoadingPageComponent({ appEl, user, goToPage });
   }
 
   if (page === AUTH_PAGE) {
@@ -123,15 +123,11 @@ const renderApp = () => {
   }
 
   if (page === POSTS_PAGE) {
-    return renderPostsPageComponent({
-      appEl,
-    });
+    return renderPostsPageComponent({ appEl, userId: null });
   }
 
   if (page === USER_POSTS_PAGE) {
-    // @TODO: реализовать страницу с фотографиями отдельного пользвателя
-    appEl.innerHTML = "Здесь будет страница фотографий пользователя";
-    return;
+    return renderPostsPageComponent({ appEl, userId: currentUserId });
   }
 };
 
