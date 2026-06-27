@@ -2,7 +2,7 @@
 
 MVP социальной сети для обмена фотографиями
 
-Ссылка:
+Ссылка: https://alexandra-kuznetsova33.github.io/webdev-cw-instapro/
 
 ## Реализованная функциональность 
 
